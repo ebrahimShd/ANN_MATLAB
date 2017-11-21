@@ -1,0 +1,57 @@
+function [ weight,output ] = LVQnetTrain( trainX, trainY, trainRate, iteration, inWeight)
+%LVQNET Summary of this function goes here
+%   Detailed explanation goes here
+
+nInput = size(trainX,2);
+nOutput = size(trainY,2);
+nTrain = size(trainX,1);
+
+% weight=rand(nInput, nOutput);
+% weight= (max(max(trainX))-min(min(trainX))).*weight + min(min(trainX))*ones(nInput,nOutput);
+%weight = trainX(1:nOutput,:)';
+if length(inWeight)
+    weight = [-0.5 -0.5 0.5 0.5; -0.5 0.5 0.5 -0.5];
+end
+D = zeros(1,nOutput);
+output = zeros(nTrain,nOutput);
+
+for train = 1:nTrain
+    for i=1:nOutput
+        D(i) = sqrt(sum((trainX(train,:)'-weight(:,i)) .^ 2));
+    end
+    [mn,mnId]=min(D);
+    output(train,:)=zeros(1,nOutput);
+    output(train,mnId)=1;
+end
+
+if ~isnull(inWeight)
+    return
+end
+
+for count=1:iteration
+    for train=1:nTrain
+        for i=1:nOutput
+            D(i) = sqrt(sum((trainX(train,:)'-weight(:,i)) .^ 2));
+        end
+        [mn,mnId]=min(D);
+        if(output(train,:)==trainY(train,:))
+            weight(:,mnId)=weight(:,mnId)+trainRate(count)*(trainX(train,:)'-weight(:,mnId));
+        else
+            weight(:,mnId)=weight(:,mnId)-trainRate(count)*(trainX(train,:)'-weight(:,mnId));
+        end
+        
+        for i=1:nOutput
+            D(i) = sqrt(sum((trainX(train,:)'-weight(:,i)) .^ 2));
+            if isnan(D(i))
+                D(i) = 0;
+            end
+        end
+        [mn,mnId]=min(D);
+        output(train,:)=zeros(1,nOutput);
+        output(train,mnId)=1;
+    end
+end
+   
+
+end
+
